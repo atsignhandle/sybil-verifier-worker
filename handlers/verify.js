@@ -5,6 +5,12 @@ import { Octokit } from '@octokit/rest'
 
 // github api info
 const USER_AGENT = 'Cloudflare Worker'
+const FILENAME = 'verified.json'
+const GITHUB_PATH = '/repos/atsignhandle/sybil-list/contents/'
+const GITHUB_AUTHENTICATION = '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'
+
+// twitter api info
+const TWITTER_BEARER = 'AAAAAAAAAAAAAAAAAAAAAHn5UwEAAAAA9Fw88lSMejxq6Chk4Cc4LY7EjWQ%3DdqQDDkM0QeBf4wbGDu6elTvhVeBS2poEaSKFPil9JMWacTFl7T'
 
 // format request for twitter api
 var requestHeaders = new Headers()
@@ -115,14 +121,11 @@ export async function handleVerify(request) {
         // initialize response
         let response
 
-        const fileName = 'verified.json'
-        const githubPath = '/repos/Uniswap/sybil-list/contents/'
-
         const fileInfo = await fetch(
-            'https://api.github.com' + githubPath + fileName,
+            `https://api.github.com${GITHUB_PATH}${FILENAME}?ref=develop`,
             {
                 headers: {
-                    Authorization: 'token ' + GITHUB_AUTHENTICATION,
+                    Authorization: `Bearer ${GITHUB_AUTHENTICATION}`,
                     'User-Agent': USER_AGENT,
                 },
             }
@@ -148,14 +151,15 @@ export async function handleVerify(request) {
         })
 
         const updateResponse = await octokit.request(
-            'PUT ' + githubPath + fileName,
+            `PUT ${GITHUB_PATH}${FILENAME}`,
             {
-                owner: 'uniswap',
+                owner: 'atsignhandle',
                 repo: 'sybil-list',
-                path: fileName,
+                path: FILENAME,
                 message: 'Linking ' + formattedSigner + ' to handle: ' + handle,
                 sha,
                 content: encodedData,
+                branch: 'develop'
             }
         )
 
