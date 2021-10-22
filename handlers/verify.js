@@ -7,7 +7,7 @@ import { Octokit } from '@octokit/rest'
 const USER_AGENT = 'Cloudflare Worker'
 const FILENAME = 'verified.json'
 const GITHUB_PATH = '/repos/atsignhandle/sybil-list/contents/'
-const GITHUB_AUTHENTICATION = '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'
+const GITHUB_AUTHENTICATION = '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'
 
 // twitter api info
 const TWITTER_BEARER = 'AAAAAAAAAAAAAAAAAAAAAHn5UwEAAAAA9Fw88lSMejxq6Chk4Cc4LY7EjWQ%3DdqQDDkM0QeBf4wbGDu6elTvhVeBS2poEaSKFPil9JMWacTFl7T'
@@ -15,6 +15,7 @@ const TWITTER_BEARER = 'AAAAAAAAAAAAAAAAAAAAAHn5UwEAAAAA9Fw88lSMejxq6Chk4Cc4LY7E
 // format request for twitter api
 var requestHeaders = new Headers()
 requestHeaders.append('Authorization', 'Bearer ' + TWITTER_BEARER)
+requestHeaders.append('Content-type', 'application/json')
 var requestOptions = {
     method: 'GET',
     headers: requestHeaders,
@@ -48,16 +49,16 @@ export async function handleVerify(request) {
         const twitterURL = `https://api.twitter.com/2/tweets?ids=${tweetID}&expansions=author_id&user.fields=username`
         requestOptions.headers.set('Origin', new URL(twitterURL).origin) // format for cors
         const twitterRes = await fetch(twitterURL, requestOptions)
-
+        
         // parse the response from Twitter
         const twitterResponse = await gatherResponse(twitterRes)
 
         // if no tweet or author found, return error
         if (!twitterResponse.data || !twitterResponse.includes) {
-            return new Response(null, {
+            return new Response(null, init, {
                 status: 400,
                 statusText: 'Invalid tweet id',
-            })
+            });
         }
 
         // get tweet text and handle
@@ -73,10 +74,10 @@ export async function handleVerify(request) {
             !twitterResponse.includes ||
             !matchedText
         ) {
-            return new Response(null, {
+            return new Response(JSON.stringify({
                 status: 400,
                 statusText: 'Invalid tweet format',
-            })
+            }), init)
         }
 
         // construct data for EIP712 signature recovery
@@ -112,14 +113,14 @@ export async function handleVerify(request) {
 
         // if signer found is not the expected signer, alert client and dont update gist
         if (account !== formattedSigner) {
-            return new Response(null, init, {
+            return new Response(JSON.stringify({
                 status: 400,
                 statusText: 'Invalid account',
-            })
+            }), init)
         }
 
         // initialize response
-        let response
+        var response
 
         const fileInfo = await fetch(
             `https://api.github.com${GITHUB_PATH}${FILENAME}?ref=develop`,
@@ -165,24 +166,24 @@ export async function handleVerify(request) {
 
         if (updateResponse.status === 200) {
             // respond with handle if succesul update
-            response = new Response(handle, init, {
+            response = new Response(JSON.stringify({
                 status: 200,
                 statusText: 'Succesful verification',
-            })
+                handle
+            }), init)
         } else {
-            response = new Response(null, init, {
+            response = new Response({
                 status: 400,
                 statusText: 'Error updating list.',
-            })
+            }, init)
         }
-
         response.headers.set('Access-Control-Allow-Origin', '*')
         response.headers.append('Vary', 'Origin')
         return response
     } catch (e) {
-        response = new Response(null, init, {
+        response = new Response(JSON.stringify({
             status: 400,
             statusText: 'Error:' + e,
-        })
+        }), init)
     }
 }
