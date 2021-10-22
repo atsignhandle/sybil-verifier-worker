@@ -3,3 +3,5 @@ worker/
 .cargo-ok
 package-lock.json
 wrangler.toml
+.yarn/*.gz
+.yarn/cache/*.zip
