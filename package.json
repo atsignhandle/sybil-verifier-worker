@@ -1,14 +1,14 @@
 {
-    "name": "my-worker-with-router",
-    "version": "1.0.0",
-    "description": "package for creating workers templates",
+    "name": "sybil-verifier",
+    "version": "0.0.1",
+    "description": "Twitter, Ethereum address verfication",
     "main": "index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "format": "prettier --write '**/*.{js,css,json,md}'"
     },
-    "author": "ianlapham <ianlapham@gmail.com>",
-    "license": "ISC",
+    "author": "@tankbottoms",
+    "license": "WTFL",
     "devDependencies": {
         "prettier": "^1.17.0"
     },
